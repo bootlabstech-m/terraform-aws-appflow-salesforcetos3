@@ -1,3 +1,91 @@
+# For Existing Bucket
+data "aws_s3_bucket" "example_destination" {
+  bucket = var.destination_bucket_name
+}
+
+# ---------------------------------------------------
+# Bucket policy allowing AppFlow to write to S3 bucket
+# ---------------------------------------------------
+data "aws_iam_policy_document" "example_destination" {
+  statement {
+    sid    = "AllowAppFlowDestinationActions"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload",
+      "s3:ListMultipartUploadParts",
+      "s3:ListBucketMultipartUploads",
+      "s3:GetBucketAcl",
+      "s3:PutObjectAcl",
+    ]
+
+    resources = [
+      data.aws_s3_bucket.example_destination.arn,
+      "${data.aws_s3_bucket.example_destination.arn}/*",
+    ]
+  }
+}
+
+resource "aws_s3_bucket_policy" "example_destination" {
+  bucket = data.aws_s3_bucket.example_destination.id
+  policy = data.aws_iam_policy_document.example_destination.json
+}
+
+# -------------------------------
+# IAM Role for AWS AppFlow access
+# -------------------------------
+resource "aws_iam_role" "appflow_execution_role" {
+  name = "appflow-s3-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "appflow.amazonaws.com"
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+
+# --------------------------------------------------
+# IAM Policy to allow AppFlow access to destination
+# --------------------------------------------------
+resource "aws_iam_policy" "appflow_s3_policy" {
+  name = "appflow-s3-access-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:*"]
+        Resource = [
+          data.aws_s3_bucket.example_destination.arn,
+          "${data.aws_s3_bucket.example_destination.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "appflow_policy_attach" {
+  role       = aws_iam_role.appflow_execution_role.name
+  policy_arn = aws_iam_policy.appflow_s3_policy.arn
+}
+
+# --------------------- 
+# Actual App flow Block:
+# ---------------------
+
 resource "aws_appflow_flow" "appflow_salesforce_to_s3" {
   name    = var.appflow_name
   kms_arn = var.kms_arn
