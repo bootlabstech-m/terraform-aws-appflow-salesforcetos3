@@ -8,6 +8,11 @@ variable "role_arn" {
   description = "The ARN of the IAM role"
 }
 
+# variable "account_id" {
+#   type = string
+#   description = "account id of the resources being created in"
+  
+# }
 variable "appflow_name" {
   type        = string
   description = "The name of the AppFlow flow"

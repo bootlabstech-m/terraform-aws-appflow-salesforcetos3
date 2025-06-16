@@ -4,41 +4,47 @@
 locals {
   destination_bucket_name = var.destination_bucket_name
   destination_bucket_arn  = "arn:aws:s3:::${var.destination_bucket_name}"
+  # account_id              = var.account_id
 }
 
-# ---------------------------------------------------
-# Bucket policy allowing AppFlow to write to S3 bucket
-# ---------------------------------------------------
-data "aws_iam_policy_document" "example_destination" {
-  statement {
-    sid    = "AllowAppFlowDestinationActions"
-    effect = "Allow"
+# # ---------------------------------------------------
+# # Bucket policy allowing AppFlow to write to S3 bucket
+# # ---------------------------------------------------
+# data "aws_iam_policy_document" "example_destination" {
+#   statement {
+#     sid    = "AllowAppFlowDestinationActions"
+#     effect = "Allow"
 
-    principals {
-      type        = "Service"
-      identifiers = ["appflow.amazonaws.com"]
-    }
+#     principals {
+#       type        = "Service"
+#       identifiers = ["appflow.amazonaws.com"]
+#     }
 
-    actions = [
-      "s3:PutObject",
-      "s3:AbortMultipartUpload",
-      "s3:ListMultipartUploadParts",
-      "s3:ListBucketMultipartUploads",
-      "s3:GetBucketAcl",
-      "s3:PutObjectAcl",
-    ]
+#     actions = [
+#       "s3:PutObject",
+#       "s3:AbortMultipartUpload",
+#       "s3:ListMultipartUploadParts",
+#       "s3:ListBucketMultipartUploads",
+#       "s3:GetBucketAcl",
+#       "s3:PutObjectAcl",
+#     ]
 
-    resources = [
-      local.destination_bucket_arn,
-      "${local.destination_bucket_arn}/*",
-    ]
-  }
-}
+#     resources = [
+#       local.destination_bucket_arn,
+#       "${local.destination_bucket_arn}/*",
+#     ]
+#     condition {
+#         test     = "StringEquals"
+#         variable = "aws:SourceArn"
+#         values   = ["arn:aws:appflow:${var.region}:${var.account_id}:flow/${var.appflow_name}"]
+#        }
+#   }
+# }
 
-resource "aws_s3_bucket_policy" "example_destination" {
-  bucket = local.destination_bucket_name
-  policy = data.aws_iam_policy_document.example_destination.json
-}
+# resource "aws_s3_bucket_policy" "example_destination" {
+#   bucket = local.destination_bucket_name
+#   policy = data.aws_iam_policy_document.example_destination.json
+# }
 
 # -------------------------------
 # IAM Role for AWS AppFlow access
