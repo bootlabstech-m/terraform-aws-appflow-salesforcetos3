@@ -1,6 +1,9 @@
-# For Existing Bucket
-data "aws_s3_bucket" "example_destination" {
-  bucket = var.destination_bucket_name
+# ---------------------------
+# Local values for existing bucket
+# ---------------------------
+locals {
+  destination_bucket_name = var.destination_bucket_name
+  destination_bucket_arn  = "arn:aws:s3:::${var.destination_bucket_name}"
 }
 
 # ---------------------------------------------------
@@ -26,14 +29,14 @@ data "aws_iam_policy_document" "example_destination" {
     ]
 
     resources = [
-      data.aws_s3_bucket.example_destination.arn,
-      "${data.aws_s3_bucket.example_destination.arn}/*",
+      local.destination_bucket_arn,
+      "${local.destination_bucket_arn}/*",
     ]
   }
 }
 
 resource "aws_s3_bucket_policy" "example_destination" {
-  bucket = data.aws_s3_bucket.example_destination.id
+  bucket = local.destination_bucket_name
   policy = data.aws_iam_policy_document.example_destination.json
 }
 
@@ -69,8 +72,8 @@ resource "aws_iam_policy" "appflow_s3_policy" {
         Effect   = "Allow"
         Action   = ["s3:*"]
         Resource = [
-          data.aws_s3_bucket.example_destination.arn,
-          "${data.aws_s3_bucket.example_destination.arn}/*"
+          local.destination_bucket_arn,
+          "${local.destination_bucket_arn}/*"
         ]
       }
     ]
