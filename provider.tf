@@ -1,10 +1,10 @@
 terraform {
-  required_version = ">= 0.13"
+  required_version = "= 1.6.4" # previous CLI version ">= 0.13"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.46"
+      version = "~> 5.46.0" # Please check the official doc of terraform/aws before upgrading
     }
   }
 
